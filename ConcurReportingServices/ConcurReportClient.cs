@@ -53,26 +53,28 @@ internal class ConcurReportClient : IConcurReportClient
         }
     }
     private async Task<int> ProcessPage(IEnumerable<ReportDto> reportDtos, DateTime utcNow)
-    {      
-        var existingReports = await _reportServices.FindReportsAsync(r => reportDtos.Select(d => d.ID).Contains(r.ConcurID));
-        foreach (var reportDto in reportDtos)
-        {   
+    {
+        var reportDtoList = reportDtos.ToList();
+        var reportIds = reportDtoList.Select(d => d.ID).ToHashSet();
+        var existingReports = await _reportServices.FindReportsAsync(r => reportIds.Contains(r.ConcurID));
+        foreach (var reportDto in reportDtoList)
+        {
             Report? existingReport = existingReports.FirstOrDefault(r => r.ConcurID == reportDto.ID);
-            
+
             //Check the LastModifiedDateTime to handle any overlap scenarios
             if (existingReport is null || reportDto.LastModifiedDate > existingReport.LastModifiedDateTimeUtc)
             {
                 List<EntryDto> entryDtos = await _expenseClient.GetEntriesAsync(reportDto.ID, limit: 100);
+                var entryIds = entryDtos.Select(d => d.ID).ToHashSet();
 
                 //Entries can be moved from one Report to another
                 //First remove any entries that are associated with other reports
-
                 var reportsWithEntries = await _reportServices.FindReportsAsync(r => r.ConcurID != reportDto.ID
-                                                                                        && r.Entries.Any(e => entryDtos.Select(d => d.ID).Contains(e.ConcurID)));
+                                                                                        && r.Entries.Any(e => entryIds.Contains(e.ConcurID)));
 
-                foreach(Report report in reportsWithEntries)
+                foreach (Report report in reportsWithEntries)
                 {
-                    var entriesToRemove = report.Entries.Where(e => entryDtos.Select(d => d.ID).Contains(e.ConcurID)).ToList();
+                    var entriesToRemove = report.Entries.Where(e => entryIds.Contains(e.ConcurID)).ToList();
                     
                     for (int i = 0; i < entriesToRemove.Count; i++)                    
                     {
