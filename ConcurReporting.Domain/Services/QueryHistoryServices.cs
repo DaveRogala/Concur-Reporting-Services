@@ -1,4 +1,4 @@
-﻿using ConcurReporting.Domain.Models;
+using ConcurReporting.Domain.Models;
 using ConcurReporting.Domain.Services.Interfaces;
 using ConcurReportingDatabaseServices.Data;
 using GenericRepositories.Interfaces;
@@ -12,8 +12,9 @@ internal class QueryHistoryServices : IQueryHistoryServices
     private bool disposedValue;
     private readonly IGenericRepository<QueryHistory, ConcurContext, int> _repository;
     private readonly ILogger<QueryHistoryServices> _logger;
-    public QueryHistoryServices(IGenericRepository<QueryHistory, ConcurContext, int> repository
-                               ,ILogger<QueryHistoryServices> logger)
+
+    public QueryHistoryServices(IGenericRepository<QueryHistory, ConcurContext, int> repository,
+                                ILogger<QueryHistoryServices> logger)
     {
         _repository = repository;
         _logger = logger;
@@ -24,11 +25,10 @@ internal class QueryHistoryServices : IQueryHistoryServices
         try
         {
             return await _repository.AddAsync(queryHistory);
-
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Add Query History failed.  Message: {msg}",ex.Message);
+            _logger.LogError(ex, "AddQueryHistoryAsync failed. Message: {msg}", ex.Message);
             throw;
         }
     }
@@ -41,7 +41,7 @@ internal class QueryHistoryServices : IQueryHistoryServices
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Get Last Query History failed.  Message: {msg}", ex.Message);
+            _logger.LogError(ex, "GetLastQueryHistoryAsync failed. Message: {msg}", ex.Message);
             throw;
         }
     }
@@ -53,11 +53,10 @@ internal class QueryHistoryServices : IQueryHistoryServices
             return (dateTimeUpdatedUtcFrom is null ? await _repository.FindAsync(q => q.IsSuccess == isSuccess)
                                                    : await _repository.FindAsync(q => q.IsSuccess == isSuccess &&
                                                                                       q.DateTimeAddedUtc >= dateTimeUpdatedUtcFrom)).ToList();
-
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Get Query History failed.  Message: {msg}", ex.Message);
+            _logger.LogError(ex, "GetQueryHistoriesAsync failed. Message: {msg}", ex.Message);
             throw;
         }
     }
@@ -67,27 +66,14 @@ internal class QueryHistoryServices : IQueryHistoryServices
         if (!disposedValue)
         {
             if (disposing)
-            {
-                // TODO: dispose managed state (managed objects)
                 _repository.Dispose();
-            }
 
-            // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-            // TODO: set large fields to null
             disposedValue = true;
         }
     }
 
-    // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-    // ~QueryHistoryServices()
-    // {
-    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-    //     Dispose(disposing: false);
-    // }
-
     public void Dispose()
     {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }

@@ -1,4 +1,4 @@
-﻿using ConcurReportingDatabaseServices.Data;
+using ConcurReportingDatabaseServices.Data;
 using ConcurReportingDatabaseServices.Models;
 using ConcurReportingDatabaseServices.Services.Interfaces;
 using GenericRepositories.Interfaces;
@@ -28,10 +28,11 @@ internal class ReportServices : IReportServices
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "FindReportAsync failed.  Exception: {msg}", ex.Message);
+            _logger.LogError(ex, "FindReportAsync failed. Message: {msg}", ex.Message);
             throw;
         }
     }
+
     public async Task<Report?> GetReportAsync(int id)
     {
         try
@@ -40,23 +41,24 @@ internal class ReportServices : IReportServices
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "GetReportAsyncFailed. Message: {msg}", ex.Message);
+            _logger.LogError(ex, "GetReportAsync failed. Message: {msg}", ex.Message);
             throw;
         }
     }
+
     public Report UpdateReport(Report report)
     {
         try
         {
-            
             return _reportRepository.Update(report);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "UpdateReportFailed. Message: {msg}", ex.Message);
+            _logger.LogError(ex, "UpdateReport failed. Message: {msg}", ex.Message);
             throw;
         }
     }
+
     public async Task<Report> AddReportAsync(Report report)
     {
         try
@@ -65,7 +67,7 @@ internal class ReportServices : IReportServices
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "AddReportAsyncFailed. Message: {msg}", ex.Message);
+            _logger.LogError(ex, "AddReportAsync failed. Message: {msg}", ex.Message);
             throw;
         }
     }
@@ -87,35 +89,21 @@ internal class ReportServices : IReportServices
             throw;
         }
     }
+
     protected virtual void Dispose(bool disposing)
     {
         if (!disposedValue)
         {
             if (disposing)
-            {
                 _reportRepository.Dispose();
-                // TODO: dispose managed state (managed objects)
-            }
 
-            // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-            // TODO: set large fields to null
             disposedValue = true;
         }
     }
 
-    // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-    // ~ReportServices()
-    // {
-    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-    //     Dispose(disposing: false);
-    // }
-
     public void Dispose()
     {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
-
-   
 }
