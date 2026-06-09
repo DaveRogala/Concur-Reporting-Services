@@ -30,7 +30,6 @@ internal static class AllocationMapper
         entity.CompanyCode = dto.Custom1?.Code;
         entity.CostCenterCode = dto.Custom2?.Code;
         entity.Department = dto.Custom3?.Code;
-        entity.ConcurID = dto.ID;
         entity.Account = dto.AccountNumber ?? "";
         entity.Account1 = dto.AccountCode2;
         entity.IsHidden = dto.IsHidden;
