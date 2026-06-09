@@ -3,4 +3,7 @@
     <File Path=".gitlab-ci.yml" />
   </Folder>
   <Project Path="ConcurReportingServices/ConcurReportingServices.csproj" />
+  <Project Path="ConcurReporting.Domain/ConcurReporting.Domain.csproj" />
+  <Project Path="ConcurReportingServices.Tests/ConcurReportingServices.Tests.csproj" />
+  <Project Path="ConcurReporting.Domain.Tests/ConcurReporting.Domain.Tests.csproj" />
 </Solution>
