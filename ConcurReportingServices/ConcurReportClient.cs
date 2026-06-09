@@ -84,7 +84,16 @@ internal class ConcurReportClient : IConcurReportClient
                     ? await _expenseClient.GetItemizationsAsync(reportDto.ID, limit: 100)
                     : [];
 
-                List<AllocationDto> allocationDtos = await _expenseClient.GetAllocationsAsync(reportDto.ID, limit: 100);            
+                List<AllocationDto> allocationDtos = await _expenseClient.GetAllocationsAsync(reportDto.ID, limit: 100);
+
+                // Filter allocations to only those with a valid parent ConcurID.
+                // Concur can enter an inconsistent state where an allocation's EntryID does not
+                // match any current entry or itemization. Saving such an allocation would produce
+                // an orphaned row (null EntryId AND null ItemizationId), and a subsequent sync
+                // that reactivates the same ConcurID would then fail on the unique index.
+                var validParentIds = new HashSet<string>(
+                    entryDtos.Select(e => e.ID).Concat(itemizationDtos.Select(i => i.ID)));
+                allocationDtos = FilterValidAllocations(allocationDtos, validParentIds, reportDto.ID);
 
                 if (existingReport is null)
                 {
@@ -123,7 +132,25 @@ internal class ConcurReportClient : IConcurReportClient
         }
         return await _reportServices.SaveChangesAsync();
     }
-    private List<Allocation> UpdateAllocations(List<Allocation> allocations,List<AllocationDto> allocationDtos, string concurId, DateTime utcNow)
+    private List<AllocationDto> FilterValidAllocations(List<AllocationDto> allocationDtos, HashSet<string> validParentIds, string reportId)
+    {
+        var valid = new List<AllocationDto>(allocationDtos.Count);
+        foreach (var dto in allocationDtos)
+        {
+            if (string.IsNullOrEmpty(dto.EntryID) || !validParentIds.Contains(dto.EntryID))
+            {
+                _logger.LogWarning(
+                    "Allocation {AllocationId} for report {ReportId} has EntryID '{EntryId}' that does not match any known entry or itemization ConcurID. Skipping to prevent orphan.",
+                    dto.ID, reportId, dto.EntryID ?? "(null)");
+            }
+            else
+            {
+                valid.Add(dto);
+            }
+        }
+        return valid;
+    }
+    private List<Allocation> UpdateAllocations(List<Allocation> allocations, List<AllocationDto> allocationDtos, string concurId, DateTime utcNow)
     {
         var joinedAllocations = allocations.ToJoinedEntities(allocationDtos.Where(a => a.EntryID == concurId).ToList());
 
@@ -146,10 +173,23 @@ internal class ConcurReportClient : IConcurReportClient
     }
     private Entry UpdateEntry(Entry entry, EntryDto dto, List<AllocationDto> allocationDtos, List<ItemizationDto> itemizationDtos, DateTime utcNow)
     {
+        List<ItemizationDto> entryItemizationDtos = itemizationDtos.Where(e => e.EntryID == entry.ConcurID).ToList();
+
+        // When all itemizations are being removed, clear their allocations BEFORE updating
+        // entry-level allocations. If EF Core uses SetNull (optional FK) rather than Cascade on
+        // Allocation→Itemization, removing the itemizations would orphan their allocations in the
+        // same SaveChanges call where the entry-level allocations (potentially sharing the same
+        // ConcurIDs) are inserted, causing a unique-index conflict.
+        if ((entry.Itemizations?.Count ?? 0) > 0 && entryItemizationDtos.Count == 0)
+        {
+            foreach (var itemization in entry.Itemizations!)
+            {
+                itemization.Allocations?.Clear();
+            }
+            entry.Itemizations = null;
+        }
 
         entry.Allocations = UpdateAllocations(entry.Allocations, allocationDtos, entry.ConcurID, utcNow);
-
-        List<ItemizationDto> entryItemizationDtos = itemizationDtos.Where(e => e.EntryID == entry.ConcurID).ToList();
 
         if ((entry.Itemizations?.Count ?? 0) == 0 && entryItemizationDtos.Count > 0)
         {
@@ -161,15 +201,9 @@ internal class ConcurReportClient : IConcurReportClient
             }
             entry.Itemizations = itemizations;
         }
-        else if ((entry.Itemizations?.Count ?? 0) > 0 && entryItemizationDtos.Count == 0)
-        {
-            //existing itemizations exist but have been removed
-           
-            entry.Itemizations = null;
-        }
         else if (entry.Itemizations is not null && entry.Itemizations.Count > 0 && entryItemizationDtos.Count > 0)
         {
-            //There are existing and updated itemizations    
+            //There are existing and updated itemizations
             var joinedItemizations = entry.Itemizations.ToJoinedEntities(entryItemizationDtos);
 
             foreach (var joinItemization in joinedItemizations)
@@ -178,17 +212,20 @@ internal class ConcurReportClient : IConcurReportClient
                 {
                     //Add new itemization
                     Itemization newItemization = joinItemization.Dto.ItemizationFromDto(utcNow);
-                    newItemization.Allocations  = allocationDtos.Where(e => e.EntryID == newItemization.ConcurID).Select(e => e.AllocationFromDto(utcNow)).ToList();
+                    newItemization.Allocations = allocationDtos.Where(e => e.EntryID == newItemization.ConcurID).Select(e => e.AllocationFromDto(utcNow)).ToList();
                     entry.Itemizations.Add(newItemization);
-
                 }
-                if(joinItemization.Entity is not null && joinItemization.Dto is not null && joinItemization.Dto.LastModified > joinItemization.Entity.LastModifiedDateTimeUtc)
+                if(joinItemization.Entity is not null && joinItemization.Dto is not null)
                 {
-                    //Updated existing itemization
-                    joinItemization.Entity = joinItemization.Entity.UpdateItemizationFromDto(joinItemization.Dto, utcNow);
-                    //need to match allocations
+                    // Always sync allocations regardless of whether the itemization itself changed.
+                    // Concur may update an allocation without bumping the parent itemization's
+                    // LastModified, so gating allocation sync on that timestamp can silently drop changes.
                     joinItemization.Entity.Allocations = UpdateAllocations(joinItemization.Entity.Allocations, allocationDtos, joinItemization.Entity.ConcurID, utcNow);
 
+                    if(joinItemization.Dto.LastModified > joinItemization.Entity.LastModifiedDateTimeUtc)
+                    {
+                        joinItemization.Entity = joinItemization.Entity.UpdateItemizationFromDto(joinItemization.Dto, utcNow);
+                    }
                 }
                 if(joinItemization.Entity is not null && joinItemization.Dto is null)
                 {
@@ -198,7 +235,7 @@ internal class ConcurReportClient : IConcurReportClient
             }
         }
 
-        return entry.UpdateEntryFromDto(dto,utcNow);
+        return entry.UpdateEntryFromDto(dto, utcNow);
     }
     private Entry GetAddEntry(EntryDto dto, List<AllocationDto> allocationDtos, List<ItemizationDto> itemizationDtos, DateTime utcNow)
     {        
