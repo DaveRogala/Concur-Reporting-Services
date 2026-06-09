@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConcurReportingDatabaseServices.Data;
 
-internal partial class ConcurContext : DbContext
+internal class ConcurContext : DbContext
 {
     public ConcurContext(DbContextOptions options) 
         : base(options)
@@ -22,17 +22,18 @@ internal partial class ConcurContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.AddInterceptors(new CascadeDeleteInterceptor())
-            .UseSqlServer()
-            .UseLazyLoadingProxies();
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlServer()
+                .UseLazyLoadingProxies();
+        }
+
+        optionsBuilder.AddInterceptors(new CascadeDeleteInterceptor());
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
-
-        OnModelCreatingPartial(modelBuilder);
     }
-    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 
 }
