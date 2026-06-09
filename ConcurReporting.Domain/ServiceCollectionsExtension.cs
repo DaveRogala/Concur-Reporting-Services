@@ -1,5 +1,4 @@
-﻿using ConcurReporting.Domain.Models;
-using ConcurReporting.Domain.Services;
+﻿using ConcurReporting.Domain.Services;
 using ConcurReporting.Domain.Services.Interfaces;
 using ConcurReportingDatabaseServices.Data;
 using ConcurReportingDatabaseServices.Models;
@@ -9,7 +8,6 @@ using ConcurReportingDatabaseServices.Services;
 using ConcurReportingDatabaseServices.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using ConcurReporting.Domain;
 
 public static class ServiceCollectionExtensions
 {
@@ -29,8 +27,7 @@ public static class ServiceCollectionExtensions
 
         services.AddDbContextFactory<ConcurContext>(options);
 
-        services.AddScoped<IGenericRepository<Report,ConcurContext,int>, ConcurGenericRepository<Report>>();
-        services.AddScoped<IGenericRepository<Allocation, ConcurContext, int>, ConcurGenericRepository<Allocation>>();
+        services.AddScoped<IGenericRepository<Report, ConcurContext, int>, ConcurGenericRepository<Report>>();
         services.AddScoped<IGenericRepository<QueryHistory, ConcurContext, int>, ConcurGenericRepository<QueryHistory>>();
 
         services.AddScoped<IReportServices,ReportServices>();

@@ -13,13 +13,11 @@ internal class ReportServices : IReportServices
     private readonly IGenericRepository<Report, ConcurContext, int> _reportRepository;
     private readonly ILogger<ReportServices> _logger;
 
-    public ReportServices(IGenericRepository<Report, ConcurContext, int> reportRepository, 
-        IGenericRepository<Allocation, ConcurContext, int> allocationRepository,
+    public ReportServices(IGenericRepository<Report, ConcurContext, int> reportRepository,
         ILogger<ReportServices> logger)
     {
         _logger = logger;
         _reportRepository = reportRepository;
-
     }
 
     public async Task<List<Report>> FindReportsAsync(Expression<Func<Report, bool>> predicate)
