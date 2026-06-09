@@ -52,7 +52,7 @@ internal class QueryHistoryServices : IQueryHistoryServices
         {
             return (dateTimeUpdatedUtcFrom is null ? await _repository.FindAsync(q => q.IsSuccess == isSuccess)
                                                    : await _repository.FindAsync(q => q.IsSuccess == isSuccess &&
-                                                                                      q.DateTimeAddedUtc >= dateTimeUpdatedUtcFrom)).ToList();
+                                                                                      q.DateTimeAddedUtc >= dateTimeUpdatedUtcFrom.Value)).ToList();
         }
         catch (Exception ex)
         {

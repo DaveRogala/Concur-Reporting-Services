@@ -107,16 +107,14 @@ public class QueryHistoryServicesTests
     [Fact]
     public async Task GetQueryHistoriesAsync_WithDateFilter_IsSuccessFalse_ExcludesSuccessAndOldRecords()
     {
-        // This test specifically verifies the fix for the bug where the date-filter
-        // branch hardcoded q.IsSuccess (always true) instead of q.IsSuccess == isSuccess.
         var (service, context) = CreateServiceAndContext("qh-date-failure");
         await using var _ = context;
 
         var cutoff = Base;
         context.QueryHistories.AddRange(
-            FailureRecord(Base.AddDays(1)),   // should be included
-            FailureRecord(Base.AddDays(-1)),  // too old
-            SuccessRecord(Base.AddDays(1))    // wrong success flag
+            SuccessRecord(Base.AddDays(1)),   // wrong success flag – excluded
+            FailureRecord(Base.AddDays(-1)),  // too old – excluded
+            FailureRecord(Base.AddDays(1))    // should be the only result
         );
         await context.SaveChangesAsync();
 
