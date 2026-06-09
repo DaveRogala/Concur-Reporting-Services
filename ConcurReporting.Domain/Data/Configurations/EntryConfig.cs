@@ -29,7 +29,8 @@ internal class EntryConfig : EntryItemizationBaseConfig<Entry>
             .OnDelete(DeleteBehavior.Cascade);
 
         entity.HasMany(e => e.Allocations)
-            .WithOne(e => e.Entry);
+            .WithOne(e => e.Entry)
+            .OnDelete(DeleteBehavior.ClientCascade);
 
         entity.HasOne(e => e.Journey)
             .WithOne(e => e.Entry)
