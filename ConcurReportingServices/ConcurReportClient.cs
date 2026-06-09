@@ -28,21 +28,21 @@ internal class ConcurReportClient : IConcurReportClient
 
         _logger = logger;        
     }
-    public async Task<int> ProcessEntities(DateTime utcNow, DateTime startDate, DateTime? endDate = null)
+    public async Task<int> ProcessEntities(DateTime startDate, DateTime? endDate = null)
     {
         try
         {
-
-            int pageSize = 100;
-            var returnedReportDtos = await _expenseClient.GetReportsAsync(limit: 100, modifiedDateAfter: startDate, modifiedDateBefore: endDate);                   
+            const int pageSize = 100;
+            var returnedReportDtos = await _expenseClient.GetReportsAsync(limit: pageSize, modifiedDateAfter: startDate, modifiedDateBefore: endDate);
             int updates = 0;
-            int pages = (int)Math.Ceiling(returnedReportDtos.Count /(decimal) pageSize);
+            int pages = (int)Math.Ceiling(returnedReportDtos.Count / (decimal)pageSize);
+            DateTime utcNow = DateTime.UtcNow;
 
             for (int i = 0; i < pages; i++)
             {
-                _logger.LogInformation($"Start Date: {startDate}, End Date: {endDate}. Page {i+1} of {pages} pages");
+                _logger.LogInformation("Start Date: {StartDate}, End Date: {EndDate}. Page {Page} of {TotalPages}", startDate, endDate, i + 1, pages);
 
-                updates += await ProcessPage(returnedReportDtos.Skip(i * pageSize).Take(pageSize), utcNow);                
+                updates += await ProcessPage(returnedReportDtos.Skip(i * pageSize).Take(pageSize), utcNow);
             }
             return updates;
         }
@@ -190,7 +190,7 @@ internal class ConcurReportClient : IConcurReportClient
         if ((entry.Itemizations?.Count ?? 0) == 0 && entryItemizationDtos.Count > 0)
         {
             // if there are no existing itemizations and there are new ones, add them as new
-            List<Itemization> itemizations = itemizationDtos.Where(e => e.EntryID == dto?.ID).Select(e => e.ItemizationFromDto(utcNow)).ToList();
+            List<Itemization> itemizations = itemizationDtos.Where(e => e.EntryID == dto.ID).Select(e => e.ItemizationFromDto(utcNow)).ToList();
             foreach (Itemization itemization in itemizations)
             {
                 itemization.Allocations = allocationDtos.Where(e => e.EntryID == itemization.ConcurID).Select(e => e.AllocationFromDto(utcNow)).ToList();
@@ -282,7 +282,7 @@ internal class ConcurReportClient : IConcurReportClient
             {
                 DateTime endDateTime = startDateTime.AddDays(7);
                 DateTime utcNow = DateTime.UtcNow;
-                entityCount = await ProcessEntities(utcNow, startDateTime, endDateTime);
+                entityCount += await ProcessEntities(startDateTime, endDateTime);
 
                 await _queryHistoryServices.AddQueryHistoryAsync(new QueryHistory
                 {

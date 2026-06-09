@@ -2,13 +2,11 @@
 
 public interface IConcurReportClient : IDisposable
 {
-    Task<int> ProcessEntities(DateTime utcNow,DateTime startDate, DateTime? endDate = null );
+    Task<int> ProcessEntities(DateTime startDate, DateTime? endDate = null);
     /// <summary>
-    /// Processes all entities
-    /// If there is no query history present will default with the start date provided
-    /// If no start Date is provided will default to 2022-01-01
+    /// Processes all entities from the last successful query up to now, paging in 7-day windows.
+    /// Falls back to <paramref name="defaultStartDate"/> when no query history exists.
+    /// If no start date is provided defaults to 2022-01-01.
     /// </summary>
-    /// <param name="defaultStartDate"></param>
-    /// <returns></returns>
-    Task<int> ProcessEntities(DateTime? defaultStartDate);
+    Task<int> ProcessEntities(DateTime? defaultStartDate = null);
 }
