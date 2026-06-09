@@ -23,12 +23,10 @@ internal class ConcurContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
-        {
-            optionsBuilder.UseSqlServer()
-                .UseLazyLoadingProxies();
-        }
+            optionsBuilder.UseSqlServer();
 
-        optionsBuilder.AddInterceptors(new CascadeDeleteInterceptor());
+        optionsBuilder.AddInterceptors(new CascadeDeleteInterceptor())
+            .UseLazyLoadingProxies();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
