@@ -1,5 +1,6 @@
-﻿using ConcurReportingDatabaseServices.Models;
-using ConcurReportingDatabaseServices.Models.Bases;
+using ConcurReportingDatabaseServices.Models;
+
+namespace ConcurReportingDatabaseServices.Models.Bases;
 
 public abstract class EntryItemizationBase : ObjectBase
 {

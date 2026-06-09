@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using ConcurReportingDatabaseServices.Models.Bases;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ConcurReportingDatabaseServices.Data.Configurations.Bases;
@@ -27,7 +28,6 @@ internal class EntryItemizationBaseConfig<T> : ObjectBaseConfig<T>
         entity.Property(e => e.NetTaxAmount).HasPrecision(18, 4);
         entity.Property(e => e.NonTaxableNonDeductibleAmount).HasMaxLength(200);
         entity.Property(e => e.NonTaxDeductibleVATAmount).HasMaxLength(200);
-        entity.Property(e => e.PersonDesignatedInContractOrRFP).HasMaxLength(200);
         entity.Property(e => e.PostedAmount).HasPrecision(18, 4);
         entity.Property(e => e.ProjectCode).HasMaxLength(200);
         entity.Property(e => e.ProjectDescription).HasMaxLength(200);

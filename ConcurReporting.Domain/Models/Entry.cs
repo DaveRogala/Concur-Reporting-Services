@@ -1,4 +1,6 @@
-﻿namespace ConcurReportingDatabaseServices.Models;
+﻿using ConcurReportingDatabaseServices.Models.Bases;
+
+namespace ConcurReportingDatabaseServices.Models;
 
 public class Entry : EntryItemizationBase
 {
