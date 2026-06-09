@@ -175,17 +175,13 @@ internal class ConcurReportClient : IConcurReportClient
     {
         List<ItemizationDto> entryItemizationDtos = itemizationDtos.Where(e => e.EntryID == entry.ConcurID).ToList();
 
-        // When all itemizations are being removed, clear their allocations BEFORE updating
-        // entry-level allocations. If EF Core uses SetNull (optional FK) rather than Cascade on
-        // Allocation→Itemization, removing the itemizations would orphan their allocations in the
-        // same SaveChanges call where the entry-level allocations (potentially sharing the same
-        // ConcurIDs) are inserted, causing a unique-index conflict.
+        // Remove itemizations before updating entry-level allocations.
+        // Itemization.Entry is a required FK so EF Core marks removed itemizations as Deleted,
+        // and the DB CASCADE from Itemization→Allocation handles their allocations.
+        // Doing this first avoids a window where entry-level allocations sharing the same
+        // ConcurID as itemization allocations would be inserted before the old rows are gone.
         if ((entry.Itemizations?.Count ?? 0) > 0 && entryItemizationDtos.Count == 0)
         {
-            foreach (var itemization in entry.Itemizations!)
-            {
-                itemization.Allocations?.Clear();
-            }
             entry.Itemizations = null;
         }
 
