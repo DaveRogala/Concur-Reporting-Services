@@ -23,22 +23,21 @@ internal static class Helpers
         int.TryParse(intString, out  int outInt) ? outInt : null;
 
     public static bool? ToBoolean(this string ynString) =>
-        ynString == "Y";
+        ynString == "Y" ? true : ynString == "N" ? false : null;
 
-    internal static List<JoinEntity<T,U>> ToJoinedEntities<T,U>(this List<T> entities, List<U> dtos)
+    internal static List<JoinEntity<T, U>> ToJoinedEntities<T, U>(this List<T> entities, List<U> dtos)
         where T : ObjectBase
-        where U: ExpenseBaseDto
+        where U : ExpenseBaseDto
     {
-       return  entities.LeftJoin(dtos,
-                                e => e.ConcurID,
-                                d => d.ID,
-                                (e, d) => new JoinEntity<T, U>(e, d))
-        .UnionBy(entities.RightJoin(dtos,
-                e => e.ConcurID,
-                d => d.ID,
-                (e, d) => new JoinEntity<T, U>(e, d))
-                , row => row)
-        .DistinctBy(e => new { e.Entity?.ConcurID, e.Dto?.ID }).ToList();
+        return entities.LeftJoin(dtos,
+                                 e => e.ConcurID,
+                                 d => d.ID,
+                                 (e, d) => new JoinEntity<T, U>(e, d))
+            .Concat(entities.RightJoin(dtos,
+                    e => e.ConcurID,
+                    d => d.ID,
+                    (e, d) => new JoinEntity<T, U>(e, d)))
+            .DistinctBy(e => new { e.Entity?.ConcurID, e.Dto?.ID }).ToList();
     }
     
 }
