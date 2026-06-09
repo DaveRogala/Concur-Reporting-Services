@@ -12,7 +12,8 @@ internal class QueryHistoryConfig : ConcurEntityBaseConfig<QueryHistory>
         base.Configure(entity);
         entity.ToTable("QueryHistories", schema: "cnc");
 
-        entity.Property(e => e.Id).HasColumnName("QueryHistoryId");        
+        entity.Property(e => e.Id).HasColumnName("QueryHistoryId");
 
+        entity.HasIndex(e => e.DateTimeAddedUtc);
     }
 }
