@@ -21,8 +21,10 @@
 		<None Include="..\README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
   <ItemGroup>
+<ItemGroup>
+	<ProjectReference Include="..\Concur-Reporting-Services\ConcurReporting.Domain" />
+</ItemGroup>
     <PackageReference Include="ConcurExpense" Version="0.8.0" />
-    <PackageReference Include="ConcurReporting.Domain" Version="0.4.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
