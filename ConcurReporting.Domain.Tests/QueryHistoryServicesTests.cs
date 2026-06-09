@@ -1,6 +1,7 @@
 using ConcurReporting.Domain;
 using ConcurReporting.Domain.Models;
 using ConcurReporting.Domain.Services;
+using ConcurReporting.Domain.Services.Interfaces;
 using ConcurReportingDatabaseServices.Data;
 using GenericRepositories;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,7 @@ public class QueryHistoryServicesTests
 {
     private static readonly DateTime Base = new(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc);
 
-    private static (QueryHistoryServices service, ConcurContext context) CreateServiceAndContext(string dbName)
+    private static (IQueryHistoryServices service, ConcurContext context) CreateServiceAndContext(string dbName)
     {
         var options = new DbContextOptionsBuilder<ConcurContext>()
             .UseInMemoryDatabase(dbName)
@@ -27,7 +28,7 @@ public class QueryHistoryServicesTests
         var repoLogger = NullLogger<GenericRepository<QueryHistory, ConcurContext, int>>.Instance;
         var repository = new ConcurGenericRepository<QueryHistory>(context, repoLogger);
         var serviceLogger = NullLogger<QueryHistoryServices>.Instance;
-        var service = new QueryHistoryServices(repository, serviceLogger);
+        IQueryHistoryServices service = new QueryHistoryServices(repository, serviceLogger);
 
         return (service, context);
     }
