@@ -7,7 +7,7 @@ namespace ConcurReporting.Helpers;
 internal static class Helpers
 {
     public static DateOnly? ToDateOnly(this string dateString) =>
-        DateOnly.TryParseExact(dateString, "yyyy-dd-MM", out DateOnly dateout) ? dateout : null;
+        DateOnly.TryParseExact(dateString, "yyyy-MM-dd", out DateOnly dateout) ? dateout : null;
 
     public static DateTime? ToDateTime(this string dateString) => 
         DateTime.TryParseExact(dateString,
