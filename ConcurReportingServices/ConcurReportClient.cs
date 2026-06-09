@@ -312,6 +312,8 @@ internal class ConcurReportClient : IConcurReportClient
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Process Entities failed.  Message: {msg}", ex.Message);
+
             try
             {
                 await _queryHistoryServices.AddQueryHistoryAsync(new QueryHistory
@@ -323,13 +325,11 @@ internal class ConcurReportClient : IConcurReportClient
                 });
                 await _queryHistoryServices.SaveChangesAsync();
             }
-            catch (Exception)
+            catch (Exception historyEx)
             {
-
-                throw;
+                _logger.LogError(historyEx, "Failed to persist failure QueryHistory. Message: {msg}", historyEx.Message);
             }
-            
-            _logger.LogError(ex, "Process Entities failed.  Message: {msg}", ex.Message);
+
             throw;
         }
     }
