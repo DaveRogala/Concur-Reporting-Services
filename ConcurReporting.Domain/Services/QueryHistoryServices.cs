@@ -33,11 +33,11 @@ internal class QueryHistoryServices : IQueryHistoryServices
         }
     }
 
-    public async Task<QueryHistory?> GetLastQueryHistoryAsync(bool IsSuccess = true)
+    public async Task<QueryHistory?> GetLastQueryHistoryAsync(bool isSuccess = true)
     {
         try
-        {            
-            return await _repository.FindFirstAsync(q => q.IsSuccess == IsSuccess, e => e.OrderByDescending(o => o.DateTimeAddedUtc),QueryTrackingBehavior.NoTracking);
+        {
+            return await _repository.FindFirstAsync(q => q.IsSuccess == isSuccess, e => e.OrderByDescending(o => o.DateTimeAddedUtc), QueryTrackingBehavior.NoTracking);
         }
         catch (Exception ex)
         {
@@ -46,12 +46,12 @@ internal class QueryHistoryServices : IQueryHistoryServices
         }
     }
 
-    public async Task<List<QueryHistory>> GetQueryHistoriesAsync(DateTime? dateTimeUpdatedUtcFrom = null, bool IsSuccess = true)
+    public async Task<List<QueryHistory>> GetQueryHistoriesAsync(DateTime? dateTimeUpdatedUtcFrom = null, bool isSuccess = true)
     {
         try
         {
-            return (dateTimeUpdatedUtcFrom is null ? await _repository.FindAsync(q => q.IsSuccess == IsSuccess)
-                                                   : await _repository.FindAsync(q => q.IsSuccess && 
+            return (dateTimeUpdatedUtcFrom is null ? await _repository.FindAsync(q => q.IsSuccess == isSuccess)
+                                                   : await _repository.FindAsync(q => q.IsSuccess == isSuccess &&
                                                                                       q.DateTimeAddedUtc >= dateTimeUpdatedUtcFrom)).ToList();
 
         }
